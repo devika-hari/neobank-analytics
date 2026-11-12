@@ -1,0 +1,10 @@
+gl_account_code,gl_account_name,account_class,normal_balance,is_off_balance,_loaded_at
+1000,Cash and central bank balances,ASSET,DEBIT,false,2026-11-01 02:00:00
+1200,Loans and advances to customers,ASSET,DEBIT,false,2026-11-01 02:00:00
+1300,Credit card receivables,ASSET,DEBIT,false,2026-11-01 02:00:00
+2000,Customer deposits,LIABILITY,CREDIT,false,2026-11-01 02:00:00
+3000,Equity,EQUITY,CREDIT,false,2026-11-01 02:00:00
+4000,Interest income,INCOME,CREDIT,false,2026-11-01 02:00:00
+4100,Fee and commission income,INCOME,CREDIT,false,2026-11-01 02:00:00
+5000,Interest expense,EXPENSE,DEBIT,false,2026-11-01 02:00:00
+9000,Undrawn credit commitments,OFF_BALANCE,DEBIT,true,2026-11-01 02:00:00

@@ -1,0 +1,6 @@
+product_code,product_name,product_category,balance_sheet_side,gl_account_code,risk_weight,ccf
+CURRENT,Current Account,DEPOSIT,LIABILITY,2000,,
+SAVINGS,Savings Account,DEPOSIT,LIABILITY,2000,,
+CREDIT_CARD,Credit Card,LENDING,ASSET,1300,0.75,0.10
+PERSONAL_LOAN,Personal Loan,LENDING,ASSET,1200,0.75,
+SME_LOAN,SME Loan,LENDING,ASSET,1200,1.00,
