@@ -51,7 +51,9 @@ models:
                 to: ref('stg_core_banking__customers')
                 field: customer_id
               config:
-                severity: warn
+                severity: error
+                warn_if: ">0"
+                error_if: ">9"
  - name: stg_core_banking__loans
    description: "One row per loan, latest version only."
    columns:

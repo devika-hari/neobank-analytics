@@ -1,0 +1,18 @@
+snapshots:
+  - name: snap_customers
+    relation: ref('stg_core_banking__customers')
+    config:
+      schema: snapshots
+      unique_key: customer_id
+      strategy: timestamp          # timestamp or check
+      updated_at: updated_at
+      dbt_valid_to_current: "to_date('9999-12-31')"
+
+  - name: snap_loans
+    relation: ref('stg_core_banking__loans')
+    config:
+      schema: snapshots
+      unique_key: loan_id
+      strategy: check          # timestamp or check
+      check_cols: ['loan_status']
+      dbt_valid_to_current: "to_date('9999-12-31')"
