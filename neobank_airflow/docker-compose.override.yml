@@ -1,0 +1,10 @@
+services:
+  scheduler:
+    volumes:
+      - ../neobank_dbt:/usr/local/airflow/dbt/neobank_dbt
+  dag-processor:
+    volumes:
+      - ../neobank_dbt:/usr/local/airflow/dbt/neobank_dbt
+  api-server:
+    volumes:
+      - ../neobank_dbt:/usr/local/airflow/dbt/neobank_dbt
