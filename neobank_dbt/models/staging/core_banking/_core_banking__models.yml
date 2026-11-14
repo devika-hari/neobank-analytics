@@ -1,0 +1,100 @@
+version: 2
+
+#Models for the core banking system. These are staging models that are used to transform the raw data into a more usable format for downstream analytics and reporting.
+# stg_core_banking__customers, stg_core_banking__accounts, stg_core_banking__loans, stg_core_banking__repayments, stg_core_banking__ledger_postings, stg_core_banking__gl_accounts
+models:
+ - name: stg_core_banking__ledger_postings
+   description: "One row per posting, latest version only."
+   columns:
+      - name: posting_id
+        description: "Primary key"
+        data_tests:
+          - unique
+          - not_null
+      - name: booking_date
+        description: "The date the posting was booked."
+        data_tests:
+          - not_null        
+      - name: value_date
+        description: "The date the posting was valued."
+        data_tests:
+          - not_null 
+      - name: direction
+        description: "The direction of the posting, either 'Debit' or 'Credit'."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['DEBIT', 'CREDIT']
+ - name: stg_core_banking__customers
+   description: "One row per customer, latest version only."
+   columns:
+      - name: customer_id
+        description: "Primary key."
+        data_tests:
+          - unique
+          - not_null    
+
+ - name: stg_core_banking__accounts
+   description: "One row per account, latest version only."
+   columns:
+      - name: account_id
+        description: "Primary key."
+        data_tests:
+          - unique
+          - not_null      
+      - name: customer_id
+        description: "Foreign key to the customer table."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_core_banking__customers')
+                field: customer_id
+              config:
+                severity: warn
+ - name: stg_core_banking__loans
+   description: "One row per loan, latest version only."
+   columns:
+      - name: loan_id
+        description: "Primary key."
+        data_tests:
+          - unique
+          - not_null      
+      - name: account_id
+        description: "Foreign key to the account table."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_core_banking__accounts')
+                field: account_id
+
+ - name: stg_core_banking__repayments
+   description: "One row per repayment, latest version only."
+   columns:
+      - name: repayment_id
+        description: "Primary key."
+        data_tests:
+          - unique
+          - not_null      
+      - name: loan_id
+        description: "Foreign key to the loan table."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_core_banking__loans')
+                field: loan_id
+
+ - name: stg_core_banking__gl_accounts
+   description: "One row per GL account, latest version only."
+   columns:
+      - name: gl_account_code
+        description: "Primary key."
+        data_tests:
+          - unique
+          - not_null      
+      - name: gl_account_name
+        description: "The name of the GL account."
+        data_tests:
+          - not_null

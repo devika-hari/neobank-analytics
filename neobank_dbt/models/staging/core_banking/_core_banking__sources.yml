@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: core_banking
+    description: "CNightly export from the core banking system"
+    database: neobank
+    schema: raw
+    tables:
+      - name: customers
+        description: "Retail and SME customers. Source sends old versions for some customers."
+      - name: accounts
+        description: "Current, savings, credit card and loan accounts."
+      - name: loans
+        description: "One row per loan contract."
+      - name: repayments
+        description: "Instalment schedule and payments, one row per instalment."
+      - name: gl_accounts
+        description: "Chart of accounts."
+      - name: ledger_postings
+        description: "Double-entry postings. May contain duplicate and re-sent rows."
+        config:
+          loaded_at_field: _loaded_at
+          freshness:
+            warn_after: {count: 1, period: day}
+            error_after: {count: 3, period: day}
