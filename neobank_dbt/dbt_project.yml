@@ -41,3 +41,7 @@ seeds:
       +column_types: {pd: "number(6,4)", lgd: "number(6,4)"}
     partners:
       +column_types: {onboarded_date: date}
+
+on-run-start:
+  - "create schema if not exists {{ target.database }}.{{ target.schema }}_audit"
+  - "create table if not exists {{ target.database }}.{{ target.schema }}_audit.model_run_log (model_name varchar, row_count number, run_started_at timestamp_ntz, invocation_id varchar)"
