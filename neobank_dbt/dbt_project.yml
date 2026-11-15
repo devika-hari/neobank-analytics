@@ -42,6 +42,12 @@ seeds:
     partners:
       +column_types: {onboarded_date: date}
 
+vars:
+  'dbt_date:time_zone': 'Europe/Berlin'
+
+on-run-end:
+  - "{{ log_run_summary(results) }}"
+  
 on-run-start:
   - "create schema if not exists {{ target.database }}.{{ target.schema }}_audit"
   - "create table if not exists {{ target.database }}.{{ target.schema }}_audit.model_run_log (model_name varchar, row_count number, run_started_at timestamp_ntz, invocation_id varchar)"

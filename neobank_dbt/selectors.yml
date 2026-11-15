@@ -1,0 +1,18 @@
+# Named selections, so the orchestrator does not carry long command lines.
+selectors:
+  - name: nightly
+    description: "Everything except the monthly risk models."
+    definition:
+      union:
+        - method: fqn
+          value: "*"
+        - exclude:
+            - method: tag
+              value: risk
+
+  - name: risk_month_end
+    description: "Risk models and everything they need upstream."
+    definition:
+      method: tag
+      value: risk
+      parents: true

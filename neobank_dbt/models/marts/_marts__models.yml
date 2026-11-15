@@ -1,0 +1,118 @@
+version: 2
+
+models:
+
+  - name: dim_customers
+    description: "One row per customer version (SCD Type 2)."
+    columns:
+      - name: customer_key
+        data_tests: [unique, not_null]
+
+  - name: dim_accounts
+    description: "One row per account, plus a placeholder row for bank-side postings."
+    columns:
+      - name: account_key
+        data_tests: [unique, not_null]
+
+  # Model contract: the build fails if a column is missing or has another type.
+  - name: dim_gl_account
+    description: "One row per GL account."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: gl_account_code
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: gl_account_name
+        data_type: varchar
+      - name: account_class
+        data_type: varchar
+      - name: normal_balance
+        data_type: varchar
+      - name: is_off_balance
+        data_type: boolean
+
+  - name: fct_postings
+    description: "One row per posting. Incremental, merged on posting_id."
+    data_tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          arguments:
+            min_value: 30000
+    columns:
+      - name: posting_id
+        data_tests: [unique, not_null]
+      - name: account_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_accounts')
+                field: account_key
+      - name: amount
+        data_tests:
+          - not_negative
+      - name: signed_amount
+        data_tests:
+          - not_null
+
+  - name: fct_loan_monthly
+    description: "One row per loan per month end. Periodic snapshot."
+    config:
+      tags: ['risk']
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [loan_id, month_end]
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          arguments:
+            column_A: principal_amount
+            column_B: outstanding_amount
+            or_equal: true
+    columns:
+      - name: loan_month_key
+        data_tests: [unique, not_null]
+      - name: outstanding_amount
+        data_tests:
+          - not_negative
+      - name: dpd_bucket
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              arguments:
+                value_set: ['0 current', '1-30', '31-60', '61-90', '90+']
+      - name: customer_key
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+
+  - name: rpt_npl_by_partner
+    description: "NPL ratio per partner per month end."
+    config:
+      tags: ['risk']
+
+  - name: rpt_loan_reconciliation
+    description: "Ledger versus loan sub-ledger, one row per loan account."
+    config:
+      tags: ['finance']
+    columns:
+      - name: reconciliation_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['MATCHED']
+              config:
+                severity: warn
+                store_failures: true
+
+exposures:
+  - name: monthly_risk_report
+    description: "Monthly NPL and expected loss report for the Risk committee."
+    type: dashboard
+    maturity: medium
+    owner:
+      name: Risk Reporting
+      email: risk-reporting@example.com
+    depends_on:
+      - ref('fct_loan_monthly')
+      - ref('rpt_npl_by_partner')
