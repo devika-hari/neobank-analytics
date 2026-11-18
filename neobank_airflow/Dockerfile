@@ -8,3 +8,7 @@ RUN python -m venv /usr/local/airflow/dbt_venv && \
 # profiles.yml contains no secrets -- every credential is read via env_var() from
 # the container's environment (populated from neobank_airflow/.env).
 COPY profiles.yml /usr/local/airflow/.dbt/profiles.yml
+
+# dbt's default lookup is ~/.dbt, which is /home/astro/.dbt for this image's user --
+# not where profiles.yml above actually lives. Point it there explicitly.
+ENV DBT_PROFILES_DIR=/usr/local/airflow/.dbt

@@ -12,6 +12,8 @@ Why this order
 Written for Airflow 3. On Airflow 2, use `from airflow import DAG` and
 `from airflow.operators.bash import BashOperator`.
 """
+import logging
+import os
 from datetime import datetime, timedelta
 
 from airflow.sdk import DAG
@@ -20,11 +22,28 @@ from airflow.providers.standard.operators.bash import BashOperator
 DBT_DIR = "/usr/local/airflow/dbt/neobank_dbt"
 DBT = f"cd {DBT_DIR} && /usr/local/airflow/dbt_venv/bin/dbt"
 
+# No real prod Snowflake database/schema is provisioned yet (see
+# SNOWFLAKE_PROD_DATABASE / SNOWFLAKE_PROD_SCHEMA in .env.example), so this
+# defaults to dev. Promote by setting DBT_TARGET=prod in the container env --
+# no code change needed.
+DBT_TARGET = os.environ.get("DBT_TARGET", "dev")
+
+log = logging.getLogger(__name__)
+
 
 def notify_failure(context):
-    """Runs when a task fails after all retries. In production: Slack or e-mail."""
+    """Runs when a task fails after all retries.
+
+    Logs at ERROR so it surfaces in the task log and anywhere Airflow's own
+    logging is shipped (e.g. CloudWatch/Stackdriver). Swap/add a real sink --
+    SlackWebhookOperator, EmailOperator -- once a Slack webhook or SMTP
+    connection is configured; none exists in this project yet.
+    """
     ti = context["task_instance"]
-    print(f"ALERT: {ti.dag_id}.{ti.task_id} failed on {context['ds']}. Log: {ti.log_url}")
+    log.error(
+        "ALERT: %s.%s failed on %s. Log: %s",
+        ti.dag_id, ti.task_id, context["ds"], ti.log_url,
+    )
 
 
 default_args = {
@@ -47,23 +66,23 @@ with DAG(
 
     source_freshness = BashOperator(
         task_id="dbt_source_freshness",
-        bash_command=f"{DBT} source freshness --target prod",
+        bash_command=f"{DBT} source freshness --target {DBT_TARGET}",
     )
 
     snapshots = BashOperator(
         task_id="dbt_snapshot",
-        bash_command=f"{DBT} snapshot --target prod",
+        bash_command=f"{DBT} snapshot --target {DBT_TARGET}",
     )
 
     build = BashOperator(
         task_id="dbt_build",
         # snapshots already ran, so exclude them here
-        bash_command=f"{DBT} build --target prod --exclude resource_type:snapshot",
+        bash_command=f"{DBT} build --target {DBT_TARGET} --exclude resource_type:snapshot",
     )
 
     docs = BashOperator(
         task_id="dbt_docs_generate",
-        bash_command=f"{DBT} docs generate --target prod",
+        bash_command=f"{DBT} docs generate --target {DBT_TARGET}",
         trigger_rule="all_done",           # refresh docs even if the build failed
     )
 
