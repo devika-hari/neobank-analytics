@@ -5,10 +5,14 @@
 name: 'neobank_dbt'
 version: '1.0.0'
 
+# Local dev runs dbt-core 1.10.x; the Airflow image pins 1.12.7 (see
+# neobank_airflow/Dockerfile). This range covers both so a version drift in
+# either environment fails loudly instead of behaving differently.
+require-dbt-version: [">=1.10.0", "<2.0.0"]
+
 # This setting configures which "profile" dbt uses for this project.
 profile: 'neobank_dbt'
-flags:
-  manage_state: false
+
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
 # found in the "models/" directory. You probably won't need to change these!
@@ -42,6 +46,12 @@ seeds:
     partners:
       +column_types: {onboarded_date: date}
 
+vars:
+  'dbt_date:time_zone': 'Europe/Berlin'
+
+on-run-end:
+  - "{{ log_run_summary(results) }}"
+  
 on-run-start:
   - "create schema if not exists {{ target.database }}.{{ target.schema }}_audit"
   - "create table if not exists {{ target.database }}.{{ target.schema }}_audit.model_run_log (model_name varchar, row_count number, run_started_at timestamp_ntz, invocation_id varchar)"

@@ -1,9 +1,13 @@
 -- STEP 1: raw tables + landing stage. Run all.
 
-use warehouse neobank_wh;
+-- Environment config: must match 00_account_setup.sql's values for this environment.
+set db_name = 'neobank';       -- e.g. 'neobank_prod' for prod
+set wh_name = 'neobank_wh';    -- e.g. 'neobank_prod_wh' for prod
 
-create schema if not exists neobank.raw;
-use schema neobank.raw;
+use warehouse identifier($wh_name);
+
+create schema if not exists identifier($db_name || '.raw');
+use schema identifier($db_name || '.raw');
 
 create or replace table customers (
   customer_id varchar, full_name varchar, customer_type varchar, country varchar, partner_id varchar,
@@ -37,4 +41,5 @@ create or replace file format csv_std
 
 create stage if not exists landing file_format = csv_std;
 
--- NEXT: upload the 6 files from raw_data/ into stage NEOBANK.RAW.LANDING (Snowsight UI), then run 02_load_raw.sql
+-- NEXT: upload the 6 files from raw_data/ into the RAW.LANDING stage of the
+-- database set above (Snowsight UI), then run 02_load_raw.sql

@@ -1,0 +1,20 @@
+version: 2
+
+# Unit test: checks the LOGIC of the model with made-up rows.
+# It does not touch real data. Runs before the model is built.
+unit_tests:
+  - name: ledger_postings_dedup_direction_and_sign
+    description: >
+      A re-sent posting keeps only the newest version, direction is normalised,
+      cents become euros, and credits get a negative signed amount.
+    model: stg_core_banking__ledger_postings
+    given:
+      - input: source('core_banking', 'ledger_postings')
+        rows:
+          - {posting_id: P1, direction: ' debit ', amount_cents: 1000, booking_date: '2026-01-05', value_date: '2026-01-05', _loaded_at: '2026-01-06 02:00:00'}
+          - {posting_id: P1, direction: 'DEBIT',   amount_cents: 1200, booking_date: '2026-01-05', value_date: '2026-01-05', _loaded_at: '2026-01-08 02:00:00'}
+          - {posting_id: P2, direction: 'C',       amount_cents: 500,  booking_date: '2026-01-05', value_date: '2026-01-05', _loaded_at: '2026-01-06 02:00:00'}
+    expect:
+      rows:
+        - {posting_id: P1, direction: DEBIT,  amount: 12.00, signed_amount: 12.00}
+        - {posting_id: P2, direction: CREDIT, amount: 5.00,  signed_amount: -5.00}
