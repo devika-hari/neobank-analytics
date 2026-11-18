@@ -1,5 +1,12 @@
 -- DAY 2 BATCH (business date 2026-11-10). DO NOT RUN until the coach says so.
-use role accountadmin; use warehouse neobank_wh; use schema neobank.raw;
+
+-- Environment config: must match 00_account_setup.sql's values for this environment.
+set db_name = 'neobank';       -- e.g. 'neobank_prod' for prod
+set wh_name = 'neobank_wh';    -- e.g. 'neobank_prod_wh' for prod
+
+use role accountadmin;
+use warehouse identifier($wh_name);
+use schema identifier($db_name || '.raw');
 
 -- 1) customer risk rating downgrades
 update customers set risk_rating='D', updated_at='2026-11-10 09:15:00', _loaded_at='2026-11-11 02:00:00' where customer_id='C00022';
